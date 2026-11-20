@@ -5,21 +5,48 @@ import { useState } from "react";
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [toDoList, setToDoList] = useState([]);
+  const [selectedCatigory, setSelectedCatigory] = useState("ALL");
 
   const addJob = () => {
-    const newJob = {
-      title: inputValue,
-      isDone: false,
-    };
-    setToDoList([...toDoList, newJob]);
+    if (inputValue.trim) {
+      const newJob = {
+        id: Date.now(),
+        title: inputValue.trim(),
+        isDone: false,
+      };
+      setToDoList([...toDoList, newJob]);
+    }
+
     setInputValue("");
   };
-  const deleteJob = (index) => {
-    const updateJob = toDoList.filter((job, i) => {
-      return index !== i;
+  const deleteJob = (id) => {
+    const updateJob = toDoList.filter((job) => {
+      return id !== job.id;
     });
     setToDoList(updateJob);
   };
+
+  const changeSelected = (status) => {
+    setSelectedCatigory(status);
+  };
+
+  const changeStatus = (id, status) => {
+    const newList = toDoList.map((todo) => {
+      if (id === todo.id) {
+        const changedJob = { id: todo.id, title: todo.title, isDone: status };
+        return changedJob;
+      } else {
+        return todo;
+      }
+    });
+    setToDoList(newList);
+  };
+
+  const filteredList = toDoList.filter((todo) => {
+    if (selectedCatigory === `DONE`) return todo.isDone === true;
+    if (selectedCatigory === `PENDING`) return todo.isDone === false;
+    if (selectedCatigory === `ALL`) return true;
+  });
 
   return (
     <div className="bg-blue-50 h-screen w-full flex justify-center">
@@ -48,33 +75,53 @@ export default function Home() {
 
         <div className="flex w-full gap-3">
           <button
-            className="bg-slate-100 h-[48px] w-full px-4 rounded-[12px] text-slate-800"
-            onClick={addJob}
+            className={`${selectedCatigory === `ALL` ? `bg-slate-400` : `bg-slate-100`} h-[48px] w-full px-4 rounded-[12px] text-slate-800`}
+            onClick={() => {
+              changeSelected("ALL");
+            }}
           >
             Бүгд
           </button>
           <button
-            className="bg-slate-100 h-[48px] w-full px-4 rounded-[12px] text-slate-800"
-            onClick={addJob}
+            className={`${selectedCatigory === `PENDING` ? `bg-slate-400` : `bg-slate-100`} h-[48px] w-full px-4 rounded-[12px] text-slate-800`}
+            onClick={() => {
+              changeSelected("PENDING");
+            }}
           >
             Хийх
           </button>
           <button
-            className="bg-slate-100 h-[48px] w-full px-4 rounded-[12px] text-slate-800"
-            onClick={addJob}
+            className={`${selectedCatigory === `DONE` ? `bg-slate-400` : `bg-slate-100`} h-[48px] w-full px-4 rounded-[12px] text-slate-800`}
+            onClick={() => {
+              changeSelected("DONE");
+            }}
           >
             Дууссан
           </button>
         </div>
 
-        <div className="flex flex-col gap-3 w-full">
-          {toDoList.map((todo, index) => {
+        <div className="flex flex-col gap-3 w-full items-center">
+          {" "}
+          {toDoList.length === 0 && (
+            <p className="text-slate-400">Лист хоосон байна ажил нэмнэ үү🙂</p>
+          )}
+          {filteredList.map((todo) => {
             return (
-              <div className="h-[48px] w-full flex justify-between px-4 items-center bg-slate-100 rounded-[12px] text-slate-800">
-                <h1>{todo.title}</h1>
+              <div
+                key={todo.id}
+                className="h-[48px] w-full flex justify-between gap-3 px-4 items-center bg-slate-100 rounded-[12px] text-slate-800"
+              >
+                <input
+                  type="checkbox"
+                  checked={todo.isDone}
+                  onChange={(event) => {
+                    changeStatus(todo.id, event.target.checked);
+                  }}
+                />
+                <h1 className="w-full">{todo.title}</h1>
                 <button
                   onClick={() => {
-                    deleteJob(index);
+                    deleteJob(todo.id);
                   }}
                 >
                   🗑️
